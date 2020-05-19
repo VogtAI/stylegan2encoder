@@ -99,8 +99,9 @@ def main():
         import cv2
         synthesis_kwargs = dict(output_transform=dict(func=tflib.convert_images_to_uint8, nchw_to_nhwc=False), minibatch_size=args.batch_size)
 
-    ref_images = [os.path.join(args.src_dir, x) for x in os.listdir(args.src_dir) if x[0] not in '._']
+    ref_images = [os.path.join(args.src_dir, x) for x in os.listdir(args.src_dir) if x[0] not in '._' and x not in os.listdir(args.generated_images_dir) ]
     ref_images = list(filter(os.path.isfile, ref_images))
+    print('len post:', len(ref_images))
 
     if len(ref_images) == 0:
         raise Exception('%s is empty' % args.src_dir)
