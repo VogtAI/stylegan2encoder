@@ -35,4 +35,4 @@ if __name__ == "__main__":
             aligned_face_path = os.path.join(ALIGNED_IMAGES_DIR, face_img_name)
             os.makedirs(ALIGNED_IMAGES_DIR, exist_ok=True)
             image_align(raw_img_path, aligned_face_path, face_landmarks)
-        os.rename(raw_img_path, os.path.join(RAW_IMAGES_DIR, "_" + img_name)
+        os.rename(raw_img_path, os.path.join(RAW_IMAGES_DIR, "_" + img_name))
