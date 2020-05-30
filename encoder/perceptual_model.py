@@ -112,7 +112,7 @@ class PerceptualModel:
             self.discriminator = None
             self.stub = create_stub(batch_size)
 
-        if self.face_mask:
+        if self.face_mask or self.background_loss is not None:
             import dlib
             self.detector = dlib.get_frontal_face_detector()
             LANDMARKS_MODEL_URL = 'http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2'
