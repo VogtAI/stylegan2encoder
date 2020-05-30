@@ -79,6 +79,9 @@ class PerceptualModel:
         self.pixel_loss = args.use_pixel_loss
         if (self.pixel_loss <= self.epsilon):
             self.pixel_loss = None
+        self.background_loss = args.use_background_loss
+        if (self.background_loss <= self.epsilon):
+            self.background_loss = None
         self.mssim_loss = args.use_mssim_loss
         if (self.mssim_loss <= self.epsilon):
             self.mssim_loss = None
@@ -97,6 +100,7 @@ class PerceptualModel:
             self.perc_model = None
         self.ref_img = None
         self.ref_weight = None
+        self.ref_background_weight = None
         self.perceptual_model = None
         self.ref_img_features = None
         self.features_weight = None
@@ -144,8 +148,11 @@ class PerceptualModel:
                                                 dtype='float32', initializer=tf.initializers.zeros())
         self.ref_weight = tf.get_variable('ref_weight', shape=generated_image.shape,
                                                dtype='float32', initializer=tf.initializers.zeros())
+        self.ref_background_weight = tf.get_variable('ref_background_weight', shape=generated_image.shape,
+                                               dtype='float32', initializer=tf.initializers.zeros())
         self.add_placeholder("ref_img")
         self.add_placeholder("ref_weight")
+        self.add_placeholder("ref_background_weight")
 
         if (self.vgg_loss is not None):
             vgg16 = VGG16(include_top=False, input_shape=(self.img_size, self.img_size, 3))
@@ -176,6 +183,12 @@ class PerceptualModel:
                 self.loss += self.pixel_loss * tf_custom_adaptive_rgb_loss(self.ref_weight * self.ref_img, self.ref_weight * generated_image)
             else:
                 self.loss += self.pixel_loss * tf_custom_logcosh_loss(self.ref_weight * self.ref_img, self.ref_weight * generated_image)
+        # + background loss on image pixels
+        if (self.background_loss is not None):
+            if self.adaptive_loss:
+                self.loss += self.background_loss * tf_custom_adaptive_rgb_loss(self.ref_background_weight * (255*np.ones(self.ref_img.shape)), self.ref_background_weight * generated_image)
+            else:
+                self.loss += self.background_loss * tf_custom_logcosh_loss(self.ref_background_weight * (255*np.ones(self.ref_img.shape)), self.ref_background_weight * generated_image)
         # + MS-SIM loss on image pixels
         if (self.mssim_loss is not None):
             self.loss += self.mssim_loss * tf.math.reduce_mean(1-tf.image.ssim_multiscale(self.ref_weight * self.ref_img, self.ref_weight * generated_image, 1))
@@ -256,7 +269,37 @@ class PerceptualModel:
             img = None
         else:
             image_mask = np.ones(self.ref_weight.shape)
-
+        
+        if self.background_loss is not None:
+            background_mask = np.zeros(self.ref_weight.shape)
+            for (i, im) in enumerate(loaded_image):
+                try:
+                    _, img_name = os.path.split(images_list[i])
+                    mask_img = os.path.join(self.mask_dir, f'{img_name}')
+                    if (os.path.isfile(mask_img)):
+                        print("Loading mask " + mask_img)
+                        imask = PIL.Image.open(mask_img).convert('L')
+                        mask = np.array(imask)/255
+                        mask = np.expand_dims(mask,axis=-1)
+                    else:
+                        mask = self.generate_face_mask(im)
+                        if False:
+                            imask = (255*mask).astype('uint8')
+                            imask = PIL.Image.fromarray(imask, 'L')
+                            print("Saving mask " + mask_img)
+                            imask.save(mask_img, 'PNG')
+                        mask = np.expand_dims(mask,axis=-1)
+                    mask = np.ones(im.shape,np.float32) * mask
+                except Exception as e:
+                    print("Exception in mask handling for " + mask_img)
+                    traceback.print_exc()
+                    mask = np.ones(im.shape[:2],np.uint8)
+                    mask = np.ones(im.shape,np.float32) * np.expand_dims(mask,axis=-1)
+                background_mask[i] = np.ones(mask.shape) - mask
+            img = None
+        else:
+            background_mask = np.ones(self.ref_weight.shape)
+            
         if len(images_list) != self.batch_size:
             if image_features is not None:
                 features_space = list(self.features_weight.shape[1:])
@@ -279,6 +322,7 @@ class PerceptualModel:
             self.assign_placeholder("features_weight", weight_mask)
             self.assign_placeholder("ref_img_features", image_features)
         self.assign_placeholder("ref_weight", image_mask)
+        self.assign_placeholder("ref_background_weight", background_mask)
         self.assign_placeholder("ref_img", loaded_image)
 
     def optimize(self, vars_to_optimize, iterations=200, use_optimizer='adam'):
