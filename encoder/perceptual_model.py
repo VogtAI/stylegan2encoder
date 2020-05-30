@@ -297,7 +297,7 @@ class PerceptualModel:
                     mask = np.ones(im.shape,np.float32) * np.expand_dims(mask,axis=-1)
                 print('ms: ', mask.shape)
                 temp = np.ones(mask.shape)
-                temp[20:,:] = 0
+                temp[:,20:] = 0
                 background_mask[i] = temp
                 #background_mask[i] = np.ones(mask.shape) - mask
             img = None
