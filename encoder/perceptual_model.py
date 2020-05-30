@@ -298,6 +298,8 @@ class PerceptualModel:
                 print('ms: ', mask.shape)
                 temp = np.ones(mask.shape)
                 temp[:,20:] = 0
+                temp[0:20,-20:] = 1
+
                 background_mask[i] = temp
                 #background_mask[i] = np.ones(mask.shape) - mask
             img = None
