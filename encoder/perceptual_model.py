@@ -295,7 +295,11 @@ class PerceptualModel:
                     traceback.print_exc()
                     mask = np.ones(im.shape[:2],np.uint8)
                     mask = np.ones(im.shape,np.float32) * np.expand_dims(mask,axis=-1)
-                background_mask[i] = np.ones(mask.shape) - mask
+                print('ms: ', mask.shape)
+                temp = np.ones(mask.shape)
+                temp[20:,:] = 0
+                background_mask[i] = temp
+                #background_mask[i] = np.ones(mask.shape) - mask
             img = None
         else:
             background_mask = np.ones(self.ref_weight.shape)
