@@ -185,10 +185,11 @@ class PerceptualModel:
                 self.loss += self.pixel_loss * tf_custom_logcosh_loss(self.ref_weight * self.ref_img, self.ref_weight * generated_image)
         # + background loss on image pixels
         if (self.background_loss is not None):
+            green_img = np.stack((0*np.ones((self.img_size, self.img_size)), 177*np.ones((self.img_size, self.img_size)), 64*np.ones((self.img_size, self.img_size))), axis=2)
             if self.adaptive_loss:
-                self.loss += self.background_loss * tf_custom_adaptive_rgb_loss(self.ref_background_weight * (255*np.ones(self.ref_img.shape)), self.ref_background_weight * generated_image)
+                self.loss += self.background_loss * tf_custom_adaptive_rgb_loss(self.ref_background_weight * green_img, self.ref_background_weight * generated_image)
             else:
-                self.loss += self.background_loss * tf_custom_logcosh_loss(self.ref_background_weight * (255*np.ones(self.ref_img.shape)), self.ref_background_weight * generated_image)
+                self.loss += self.background_loss * tf_custom_logcosh_loss(self.ref_background_weight * green_img, self.ref_background_weight * generated_image)
         # + MS-SIM loss on image pixels
         if (self.mssim_loss is not None):
             self.loss += self.mssim_loss * tf.math.reduce_mean(1-tf.image.ssim_multiscale(self.ref_weight * self.ref_img, self.ref_weight * generated_image, 1))
