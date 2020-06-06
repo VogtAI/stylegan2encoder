@@ -42,6 +42,8 @@ def main():
     parser.add_argument('--batch_size', default=1, help='Batch size for generator and perceptual model', type=int)
     parser.add_argument('--optimizer', default='ggt', help='Optimization algorithm used for optimizing dlatents')
 
+    parser.add_argument('--background_color', default=[0,0,0], nargs='+')
+
     # Perceptual model params
     parser.add_argument('--vgg_url', default='https://drive.google.com/uc?id=1N2-m9qszOeVC9Tq77WxsLnuWwOedQiD2', help='Fetch VGG model on from this URL')
     parser.add_argument('--image_size', default=256, help='Size of images for perceptual model', type=int)
