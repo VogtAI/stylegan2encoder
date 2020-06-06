@@ -74,7 +74,11 @@ class PerceptualModel:
         self.use_grabcut = args.use_grabcut
         self.scale_mask = args.scale_mask
         self.mask_dir = args.mask_dir
-        self.background_color = args.background_color
+        
+        print(args.background_color)
+        print(type(args.background_color))
+
+        self.background_color = np.array(args.background_color)
         if (self.layer <= 0 or self.vgg_loss <= self.epsilon):
             self.vgg_loss = None
         self.pixel_loss = args.use_pixel_loss
