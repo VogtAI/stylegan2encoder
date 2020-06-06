@@ -78,7 +78,12 @@ class PerceptualModel:
         print(args.background_color)
         print(type(args.background_color))
 
-        self.background_color = np.array(args.background_color)
+        self.background_color = args.background_color
+        
+        for e in self.background_color:
+            e = int(e)
+        
+        print(self.background_color)
         if (self.layer <= 0 or self.vgg_loss <= self.epsilon):
             self.vgg_loss = None
         self.pixel_loss = args.use_pixel_loss
