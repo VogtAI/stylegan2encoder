@@ -74,6 +74,7 @@ class PerceptualModel:
         self.use_grabcut = args.use_grabcut
         self.scale_mask = args.scale_mask
         self.mask_dir = args.mask_dir
+        self.background_color = args.background_color
         if (self.layer <= 0 or self.vgg_loss <= self.epsilon):
             self.vgg_loss = None
         self.pixel_loss = args.use_pixel_loss
@@ -185,7 +186,7 @@ class PerceptualModel:
                 self.loss += self.pixel_loss * tf_custom_logcosh_loss(self.ref_weight * self.ref_img, self.ref_weight * generated_image)
         # + background loss on image pixels
         if (self.background_loss is not None):
-            green_img = np.stack((0*np.ones((self.img_size, self.img_size)), 0*np.ones((self.img_size, self.img_size)), 0*np.ones((self.img_size, self.img_size))), axis=2) # 0 177 64
+            green_img = np.stack((self.background_color[0]*np.ones((self.img_size, self.img_size)), self.background_color[1]*np.ones((self.img_size, self.img_size)), self.background_color[2]*np.ones((self.img_size, self.img_size))), axis=2) # 0 177 64
             if self.adaptive_loss:
                 self.loss += self.background_loss * tf_custom_adaptive_rgb_loss(self.ref_background_weight * green_img, self.ref_background_weight * generated_image)
             else:
